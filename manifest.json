@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ClarityCheck by AI",
+  "name": "ClarityCheck",
   "version": "0.1.0",
   "description": "Assesses news/social media credibility using AI, detecting bias & disinformation.",
   "permissions": [
