@@ -10,6 +10,16 @@
     "tabs",
     "contextMenus"
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon16.png",
+        "icons/icon48.png",
+        "icons/icon128.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/"
   ],
@@ -33,7 +43,8 @@
     "default_title": "Analyze Page with ClarityCheck",
     "default_icon": {
         "16": "icons/icon16.png",
-        "48": "icons/icon48.png"
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
     }
   },
   "options_ui": {
