@@ -442,6 +442,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     // RE-ADD handling for verifyClaim
     } else if (info.menuItemId === "verifyClaim") {
         console.log("Context menu clicked for claim verification:", selection);
+        // Show loading sidebar immediately
+        chrome.tabs.sendMessage(tab.id, { action: "showClaimVerificationLoading" });
         verifyClaimWithGemini(selection).then(result => {
             console.log("Sending claim verification result to content script", result);
             // Use a different action name for claim verification results

@@ -432,7 +432,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
        }
     }
-    // RE-ADD handler for Claim Verification display
+    // --- Handler for Claim Verification Loading State ---
+    else if (message.action === "showClaimVerificationLoading") {
+        // Ensure panel exists
+        if (!customPanel) createCustomPanel();
+        if (panelStatusIndicator) {
+            panelStatusIndicator.textContent = "Verifying...";
+            panelStatusIndicator.className = 'claritycheck-panel-status-indicator claritycheck-status-analyzing';
+        }
+        // Clear previous results and bars
+        const barsContainer = panelContent?.querySelector('.claritycheck-info-bars-container');
+        if (barsContainer) barsContainer.innerHTML = '';
+        panelContent?.classList.remove('claritycheck-has-bars');
+        clearHighlights();
+        updateIndicatorStatus('neutral');
+        if (panelResultsDiv) {
+            panelResultsDiv.innerHTML = '<div class="claritycheck-loading"><div class="claritycheck-spinner"></div><div>Verifying claim with web search&hellip;</div></div>';
+        }
+        showCustomPanel();
+    }
+    // --- RE-ADD handler for Claim Verification display
     else if (message.action === "displayClaimVerification") {
         // Ensure panel exists
         if (!customPanel) createCustomPanel();
