@@ -22,4 +22,5 @@ A browser extension utilizing advanced AI reasoning capabilities to assess the c
 ## Development Notes
 
 *   Built using standard Web Extension APIs.
-*   Uses Google-inspired design principles. 
+*   Uses Google-inspired design principles.
+*   
