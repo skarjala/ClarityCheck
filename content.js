@@ -432,6 +432,130 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
        }
     }
+    // RE-ADD handler for Claim Verification display
+    else if (message.action === "displayClaimVerification") {
+        // Ensure panel exists
+        if (!customPanel) createCustomPanel();
+        
+        // Update status indicator (Neutral/Info for verification)
+        if (panelStatusIndicator) {
+            panelStatusIndicator.textContent = "Verification";
+            panelStatusIndicator.className = 'claritycheck-panel-status-indicator status-neutral';
+        }
+        // Clear previous analysis content (like political bar)
+        const barsContainer = panelContent?.querySelector('.claritycheck-info-bars-container');
+        if (barsContainer) barsContainer.innerHTML = ''; // Remove bars
+        panelContent?.classList.remove('claritycheck-has-bars');
+        clearHighlights(); // Clear any previous text highlights
+        updateIndicatorStatus('neutral'); // Set floating indicator to neutral
+        
+        if (panelResultsDiv) {
+            panelResultsDiv.innerHTML = ''; // Clear previous results
+            const resultData = message.data;
+            
+            if (resultData?.error) {
+                 // Display error message
+                 panelResultsDiv.innerHTML = `<p class="claritycheck-panel-error">Error verifying claim: ${resultData.error}</p>`;
+                 if (panelStatusIndicator) { // Update status to red on error
+                     panelStatusIndicator.textContent = "Error";
+                     panelStatusIndicator.className = 'claritycheck-panel-status-indicator status-red';
+                 }
+                 updateIndicatorStatus('red'); // Update floating indicator
+            } else if (resultData?.sources && Array.isArray(resultData.sources)) {
+                 // Display the sources
+                 const header = document.createElement('h3');
+                 header.textContent = 'Claim Verification Sources:';
+                 header.className = 'claritycheck-panel-findings-title';
+                 panelResultsDiv.appendChild(header);
+                 
+                 if (resultData.sources.length > 0) {
+                     const list = document.createElement('ul');
+                     list.className = 'claritycheck-panel-findings-list claritycheck-verification-list'; // Add specific class
+                     
+                     resultData.sources.forEach(source => {
+                         const item = document.createElement('li');
+                         item.className = 'claritycheck-verification-item';
+                         
+                         // --- Agreement Indicator (Badge Style) --- 
+                         const agreement = source.agreement?.toLowerCase() || 'unknown'; // Normalize
+                         let indicatorClass = 'status-neutral'; // Default (grey/yellow)
+                         let indicatorText = 'Neutral/Unknown'; // For title attribute
+                         
+                         if (agreement === 'supports') {
+                             indicatorClass = 'status-green';
+                             indicatorText = 'Supports';
+                         } else if (agreement === 'contradicts') {
+                             indicatorClass = 'status-red';
+                             indicatorText = 'Contradicts';
+                         } else if (agreement === 'neutral') {
+                              indicatorClass = 'status-yellow'; // Use yellow for explicit neutral
+                              indicatorText = 'Neutral';
+                         }
+                         
+                         const agreementBadge = document.createElement('span');
+                         agreementBadge.className = `claritycheck-agreement-badge ${indicatorClass}`;
+                         agreementBadge.title = `Source stance on claim: ${indicatorText}`; // Keep title for accessibility
+                         item.appendChild(agreementBadge); // Add badge first
+                         // --- End Agreement Indicator --- 
+
+                         // --- NEW: Text Content Wrapper --- 
+                         const textWrapper = document.createElement('div');
+                         textWrapper.className = 'claritycheck-verification-text';
+                         // --- END NEW --- 
+
+                         const sourceName = document.createElement('strong');
+                         sourceName.textContent = source.name || "Unknown Source";
+                         // Add space after name if link exists (handled by inline display now)
+                         // if (source.url && source.url !== '#') { 
+                         //     sourceName.textContent += ' ';
+                         // }
+                         
+                         const sourceLink = document.createElement('a');
+                         sourceLink.href = source.url || '#';
+                         sourceLink.textContent = "(Link)";
+                         sourceLink.target = '_blank'; // Open in new tab
+                         sourceLink.rel = 'noopener noreferrer';
+                         sourceLink.className = 'claritycheck-verification-link';
+                                                 
+                         const sourceSummary = document.createElement('p');
+                         // Use the potentially concise summary
+                         sourceSummary.textContent = source.summary || "No summary available.";
+                         sourceSummary.className = 'claritycheck-verification-summary';
+                         
+                         // Append elements to the text wrapper
+                         textWrapper.appendChild(sourceName);
+                         if (source.url && source.url !== '#') {
+                             textWrapper.appendChild(sourceLink);
+                         }
+                         textWrapper.appendChild(sourceSummary);
+
+                         // Append the wrapper to the list item
+                         item.appendChild(textWrapper);
+                         list.appendChild(item);
+                     });
+                     panelResultsDiv.appendChild(list);
+                 } else {
+                      // Display message if no sources were found
+                      const noSources = document.createElement('p');
+                      noSources.textContent = "No relevant sources found during web search for this claim.";
+                      noSources.style.fontStyle = 'italic';
+                      panelResultsDiv.appendChild(noSources);
+                 }
+            } else {
+                 // Handle unexpected data format
+                 panelResultsDiv.innerHTML = `<p class="claritycheck-panel-error">Received unexpected data format for claim verification.</p>`;
+                 if (panelStatusIndicator) { // Update status to red on error
+                     panelStatusIndicator.textContent = "Error";
+                     panelStatusIndicator.className = 'claritycheck-panel-status-indicator status-red';
+                 }
+                 updateIndicatorStatus('red'); // Update floating indicator
+            }
+        } else {
+             console.error("Custom panel results div not found for claim verification!");
+        }
+        // Ensure panel is visible
+        showCustomPanel();
+    }
 
     return false;
 });

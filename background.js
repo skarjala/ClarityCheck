@@ -230,6 +230,172 @@ ${textToAnalyze}
     }
 }
 
+// --- RE-ADD Claim Verification Logic with Grounding ---
+async function verifyClaimWithGemini(claimToVerify) {
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+        console.error("ClarityCheck: Gemini API key not found for claim verification.");
+        return { error: "API Key not set. Please configure it." };
+    }
+
+    console.log("Calling Gemini API for claim verification with grounding...");
+
+    // Updated prompt asking for concise summary and agreement status
+    const prompt = `Analyze the following claim rigorously using a web search:
+"${claimToVerify}"
+
+1.  Perform a web search to identify authoritative sources (news agencies, fact-checkers, reputable organizations) that have addressed this claim.
+2.  For each relevant source found in your search, determine its stance towards the claim.
+3.  Provide the following for each source:
+    a.  The name of the source.
+    b.  The actual URL found during your search.
+    c.  A **very concise (1 sentence)** summary of the perspective or information that source provides regarding the claim's validity or context based on the search results.
+    d.  An **agreement indicator** which MUST be one of: "Supports", "Contradicts", or "Neutral".
+4.  Structure your entire response STRICTLY as a single JSON object containing a key named "sources". The value of "sources" should be an array of objects, where each object has the keys "name", "url", "summary", and "agreement".
+
+Example JSON Response Format:
+\`\`\`json
+{
+  "sources": [
+    {
+      "name": "Example News Agency",
+      "url": "https://example.com/news/actual-search-result-url",
+      "summary": "Confirms the core assertion with data from their investigation.",
+      "agreement": "Supports"
+    },
+    {
+      "name": "FactCheck Website",
+      "url": "https://factcheck.example.org/claim-review-url",
+      "summary": "Debunks the claim, highlighting factual errors found online.",
+      "agreement": "Contradicts"
+    },
+    {
+      "name": "Neutral Analysis Org",
+      "url": "https://neutral.example/context-article",
+      "summary": "Provides background context without taking a definitive stance.",
+      "agreement": "Neutral"
+    }
+  ]
+}
+\`\`\`
+
+Return ONLY the JSON object and nothing else. If your web search yields no relevant sources for the specific claim, return an empty sources array: { "sources": [] }. Do not include introductory text or markdown formatting around the JSON.`;
+
+    const requestBody = {
+        contents: [{ parts: [{ text: prompt }] }],
+        tools: [
+            { googleSearch: {} } 
+        ],
+        // Cannot use responseMimeType with grounding tool
+    };
+
+    try {
+        const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("ClarityCheck: Claim Verification API Error (Grounding):", response.status, errorText);
+            // Try to parse error for more specific message
+             try {
+                 const errorData = JSON.parse(errorText);
+                 return { error: `API request failed (${response.status}): ${errorData?.error?.message || errorText}` };
+             } catch (e) {
+                 return { error: `API request failed (${response.status}). ${errorText.substring(0, 200)}...` };
+             }
+        }
+
+        const data = await response.json();
+        console.log("ClarityCheck: Claim Verification API Response (Grounding):", data);
+
+        const candidate = data.candidates?.[0];
+        if (!candidate) {
+            // Handle cases where API returns 200 OK but no candidates (e.g., blocked prompt)
+            const blockReason = data.promptFeedback?.blockReason;
+            if (blockReason) {
+                 console.error(`ClarityCheck: Prompt blocked due to ${blockReason}`);
+                 return { error: `Request blocked due to safety reasons (${blockReason}).` };
+            }
+            console.error("ClarityCheck: No candidate found in claim verification response.");
+            return { error: "No candidate received from API." };
+        }
+
+        // --- PARSING LOGIC: Prioritize Grounding Metadata, then attempt to parse text for details --- 
+        const groundingMetadata = candidate.groundingMetadata;
+        const textResponse = candidate.content?.parts?.[0]?.text || "";
+        let parsedTextData = null;
+
+        // Best effort: Try parsing the text response as JSON even if grounding occurred
+        if (textResponse) {
+             try {
+                 const cleanedJson = textResponse.replace(/^```json\s*|```$/g, '').trim();
+                 if (cleanedJson) { // Only parse if non-empty after cleaning
+                     parsedTextData = JSON.parse(cleanedJson);
+                 }
+             } catch (e) {
+                 console.warn("Could not parse text response as JSON (this is expected if grounding was primary):", e);
+                 // It's okay if this fails, especially if grounding metadata is present
+             }
+        }
+        
+        if (groundingMetadata?.groundingChunks?.length > 0) {
+             console.log("Found grounding metadata, extracting sources and trying to merge with text data...");
+             const sources = groundingMetadata.groundingChunks.map((chunk, index) => {
+                 const name = chunk.web?.title || "Unknown Source";
+                 const url = chunk.web?.uri || "#";
+                 
+                 // Attempt to find corresponding summary/agreement from parsed text data
+                 const textSource = parsedTextData?.sources?.[index]; 
+                 let summary = "Grounded source. Summary not extracted."; // Default
+                 let agreement = "Unknown"; // Default
+                 
+                 if (textSource) {
+                     // Basic check: does the name roughly match? (Very naive)
+                     if (textSource.name && name.includes(textSource.name.substring(0,10))) {
+                         summary = textSource.summary || summary;
+                         agreement = textSource.agreement || agreement;
+                     } else {
+                          console.warn(`Grounding chunk ${index} name '${name}' didn't seem to match text source name '${textSource.name}'. Using defaults.`);
+                     }
+                 } else if (parsedTextData?.sources?.length === groundingMetadata.groundingChunks.length) {
+                     // If counts match but names didn't, maybe just take it by index?
+                      console.warn(`Name mismatch but counts match for index ${index}. Taking summary/agreement by index anyway.`);
+                      summary = parsedTextData.sources[index]?.summary || summary;
+                      agreement = parsedTextData.sources[index]?.agreement || agreement;
+                 }
+                 
+                 return { name, url, summary, agreement };
+             });
+             return { sources: sources };
+        }
+        
+        // --- Fallback to parsing JSON from text part if no grounding metadata --- 
+        console.log("No grounding metadata found or used, relying solely on parsed text JSON...");
+        if (parsedTextData?.sources && Array.isArray(parsedTextData.sources)) {
+             // Validate expected fields (optional but good practice)
+             parsedTextData.sources.forEach(s => {
+                 s.agreement = s.agreement || "Unknown"; // Ensure agreement field exists
+                 s.summary = s.summary || "Summary not provided."; // Ensure summary exists
+             });
+             return parsedTextData; 
+        } else {
+             console.error("ClarityCheck: Failed to extract valid sources from API response text.", "Text Response:", textResponse);
+             // Check for block reason if candidate exists but content is bad
+             if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+                 return { error: `API call finished unexpectedly (${candidate.finishReason}). Check safety settings or prompt.` };
+             }
+             return { error: "Failed to parse valid source data from API response." };
+        }
+
+    } catch (error) {
+        console.error("ClarityCheck: Network or other error during claim verification (Grounding):", error);
+        return { error: `Network error or other issue: ${error.message}` };
+    }
+}
+
 // --- Context Menu Setup ---
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
@@ -237,32 +403,57 @@ chrome.runtime.onInstalled.addListener(() => {
         title: "Analyze selection with ClarityCheck",
         contexts: ["selection"]
     });
-    console.log("ClarityCheck context menu created.");
+    // RE-ADD context menu for claim verification
+    chrome.contextMenus.create({
+        id: "verifyClaim",
+        title: "Verify selected claim with ClarityCheck",
+        contexts: ["selection"]
+    });
+    console.log("ClarityCheck context menus created."); // Update log message
 });
 
 // --- MODIFIED Context Menu Click Handler ---
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "analyzeSelection" && info.selectionText) {
-        console.log("Context menu clicked for selection:", info.selectionText);
-        callGeminiApi(info.selectionText).then(result => {
-            if (result && tab?.id) {
-                console.log("Sending structured analysis (with score) to content script", result);
-                // Send full result object (including score) to content script
-                chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: result });
-            } else {
-                 const errorResult = result || { status: 'neutral', analysis: 'Analysis failed.', politicalLeaning: 'Unknown', politicalLeaningScore: null, findings: [] };
-                 console.log("Analysis failed or no tab ID found. Sending error to content script");
-                 if (tab?.id) {
-                    chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: errorResult });
-                 }
-            }
+    // Restore handling for both menu items
+    if (!tab?.id || !info.selectionText) return; // Basic validation
+
+    const selection = info.selectionText.trim();
+
+    if (info.menuItemId === "analyzeSelection") {
+        console.log("Context menu clicked for analysis:", selection);
+        callGeminiApi(selection).then(result => {
+             if (result && tab?.id) {
+                 console.log("Sending structured analysis (with score) to content script", result);
+                 chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: result });
+             } else {
+                  const errorResult = result || { status: 'neutral', analysis: 'Analysis failed.', politicalLeaning: 'Unknown', politicalLeaningScore: null, findings: [] };
+                  console.log("Analysis failed or no tab ID found. Sending error to content script");
+                  if (tab?.id) {
+                     chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: errorResult });
+                  }
+             }
         }).catch(error => {
              console.error("Error during context menu analysis processing:", error);
              const errorResult = { status: 'neutral', analysis: 'An unexpected error occurred during analysis.', politicalLeaning: 'Unknown', politicalLeaningScore: null, findings: [] };
              if (tab?.id) {
                 chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: errorResult });
              }
-         });
+        });
+    // RE-ADD handling for verifyClaim
+    } else if (info.menuItemId === "verifyClaim") {
+        console.log("Context menu clicked for claim verification:", selection);
+        verifyClaimWithGemini(selection).then(result => {
+            console.log("Sending claim verification result to content script", result);
+            // Use a different action name for claim verification results
+            chrome.tabs.sendMessage(tab.id, { 
+                action: "displayClaimVerification", 
+                data: result // This will be { sources: [...] } or { error: "..." }
+            });
+        }).catch(error => {
+            console.error("Error during context menu claim verification processing:", error);
+            const errorResult = { error: `An unexpected error occurred during claim verification: ${error.message}` };
+            chrome.tabs.sendMessage(tab.id, { action: "displayClaimVerification", data: errorResult });
+        });
     }
 });
 

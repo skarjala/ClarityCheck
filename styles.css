@@ -452,4 +452,61 @@ body {
 } */
 
 /* Remove old status styles if no longer needed */
-/* #claritycheck-custom-panel-status { display: none; } */ 
+/* #claritycheck-custom-panel-status { display: none; }  */
+
+/* Styles for Claim Verification Sources */
+
+/* Style for the agreement badge container (the <li>) */
+.claritycheck-verification-item {
+  display: flex; 
+  align-items: flex-start; /* Align badge to top of text block */
+  margin-bottom: 12px; /* Increase spacing slightly */
+  line-height: 1.4;
+}
+
+/* Base style for the agreement badge */
+.claritycheck-agreement-badge {
+  display: inline-block;
+  width: 12px;          
+  height: 12px;         
+  border-radius: 50%;   
+  margin-right: 8px;    
+  margin-top: 4px;      /* Align baseline slightly */
+  flex-shrink: 0;     
+}
+
+/* Colors based on status classes (match floating indicator colors) */
+.claritycheck-agreement-badge.status-green { background-color: #2ecc71; border: 1px solid #27ae60; }
+.claritycheck-agreement-badge.status-red { background-color: #e74c3c; border: 1px solid #c0392b; }
+.claritycheck-agreement-badge.status-yellow { background-color: #f1c40f; border: 1px solid #f39c12; }
+.claritycheck-agreement-badge.status-neutral { background-color: #bdc3c7; border: 1px solid #95a5a6; }
+
+/* Container for the text part (name, link, summary) */
+.claritycheck-verification-text {
+  flex-grow: 1; /* Allow text block to take remaining space */
+  /* No specific alignment needed here, block elements inside will stack */
+}
+
+.claritycheck-verification-item strong {
+  font-weight: 600; 
+  display: inline; /* Allow link to sit beside it */
+}
+
+.claritycheck-verification-link {
+  font-size: 0.9em;
+  margin-left: 4px;
+  color: #3498db;
+  text-decoration: none;
+  display: inline; /* Keep on same line as name */
+}
+.claritycheck-verification-link:hover {
+  text-decoration: underline;
+}
+
+.claritycheck-verification-summary {
+  /* Should be block display by default */
+  margin-top: 4px; /* Add space between name/link line and summary */
+  font-size: 0.9em;
+  color: #555;
+  /* No left margin needed, alignment handled by parent */
+}
