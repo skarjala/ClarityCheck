@@ -62,6 +62,9 @@ function createCustomPanel() {
         <div class="claritycheck-panel-header">
             <span id="claritycheck-panel-status-indicator" class="claritycheck-panel-status-indicator status-neutral">Neutral</span> <!-- NEW Status Indicator -->
             <h1 class="claritycheck-panel-title">ClarityCheck</h1>
+            <button id="claritycheck-usage-stats-btn" class="claritycheck-panel-button" title="Show Usage Stats" style="margin-right:6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M3 17h3v-7H3v7zm5 0h3V7H8v10zm5 0h3v-4h-3v4zm5 0h3V4h-3v13z" fill="#888"/></svg>
+            </button>
             <button id="claritycheck-reading-mode-toggle" class="claritycheck-panel-button" title="Toggle Clarity Reading Mode">
                  <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px"><path d="M0 0h24v24H0z" fill="none"/><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                  <!-- Removed text span -->
@@ -89,6 +92,13 @@ function createCustomPanel() {
     const closeButton = customPanel.querySelector('#claritycheck-panel-close');
 
     // Add listeners for panel buttons
+    // Usage Stats Button
+    const usageStatsBtn = customPanel.querySelector('#claritycheck-usage-stats-btn');
+    usageStatsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showUsageStatsModal();
+    });
+
     closeButton?.addEventListener('click', (e) => {
         e.stopPropagation();
         hideCustomPanel();
@@ -136,6 +146,8 @@ function createFloatingIndicator() {
     floatingIndicator.innerHTML = `<img src="${iconUrl}" alt="ClarityCheck Status" width="28" height="28">`;
 
     floatingIndicator.addEventListener('click', () => {
+        // Increment usage stats every time the indicator is clicked
+        incrementUsageStats([]);
         console.log('ClarityCheck indicator clicked!');
         // Toggle the custom panel visibility using classes
         if (customPanel && customPanel.classList.contains('claritycheck-panel-visible')) {
@@ -712,6 +724,57 @@ function clearHighlights() {
     });
 }
 
+// --- Usage Stats Logic ---
+function getUsageStats() {
+    // Get stats from localStorage
+    let stats = JSON.parse(localStorage.getItem('claritycheck_usage_stats') || '{}');
+    if (!stats.totalAnalyzed) stats.totalAnalyzed = 0;
+    if (!stats.issues) stats.issues = {};
+    return stats;
+}
+function incrementUsageStats(findings) {
+    let stats = getUsageStats();
+    stats.totalAnalyzed++;
+    // Count issue categories
+    if (Array.isArray(findings)) {
+        findings.forEach(f => {
+            if (f.category) {
+                const cat = f.category.toUpperCase();
+                stats.issues[cat] = (stats.issues[cat] || 0) + 1;
+            }
+        });
+    }
+    localStorage.setItem('claritycheck_usage_stats', JSON.stringify(stats));
+}
+function showUsageStatsModal() {
+    // Remove any existing modal
+    document.querySelectorAll('.claritycheck-usage-modal').forEach(m => m.remove());
+    const stats = getUsageStats();
+    const modal = document.createElement('div');
+    modal.className = 'claritycheck-usage-modal';
+    // Encouraging statements
+    const encouragements = [
+      "Great job! Keep on reading!",
+      "You're making progress!",
+      "Curiosity is your superpower!",
+      "Knowledge is power—keep exploring!",
+      "Every article makes you wiser!"
+    ];
+    const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+    modal.innerHTML = `
+      <div class="claritycheck-usage-modal-content">
+        <span class="claritycheck-panel-title">ClarityCheck Usage Stats</span>
+        <button class="claritycheck-usage-close-btn" id="claritycheck-usage-close" title="Close Usage Stats" aria-label="Close">&times;</button>
+        <p style="margin-top:10px;"><b>Articles Analyzed:</b> ${stats.totalAnalyzed}</p>
+        <div style="margin:18px 0 2px 0; font-size:1.04em; color:#007AFF; font-weight:500;">${randomEncouragement}</div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#claritycheck-usage-close').onclick = () => modal.remove();
+    // Optional: close modal on overlay click
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
 // Function to apply highlights based on findings
 function applyHighlights(findings) {
     console.log("Applying highlights for findings:", findings);
@@ -731,6 +794,8 @@ function applyHighlights(findings) {
         return;
     }
 
+    // Always increment articles analyzed, even if no findings
+    incrementUsageStats(findingsToHighlight);
     findingsToHighlight.forEach(finding => {
         const quote = finding.quote;
         const category = finding.category.toUpperCase();
