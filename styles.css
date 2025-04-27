@@ -454,6 +454,31 @@ body {
 /* Remove old status styles if no longer needed */
 /* #claritycheck-custom-panel-status { display: none; }  */
 
+/* Spinner and loading for claim verification */
+.claritycheck-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  font-size: 1.1em;
+  color: #555;
+  padding: 16px 0;
+}
+.claritycheck-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid #007AFF;
+  border-radius: 50%;
+  animation: claritycheck-spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes claritycheck-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Styles for Claim Verification Sources */
 
 /* Style for the agreement badge container (the <li>) */
