@@ -1,0 +1,105 @@
+/* Styles specific to the side panel */
+.container {
+    padding: 15px;
+    background-color: #f8f9fa; /* Light grey background */
+    min-height: 100vh; /* Use min-height */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dadce0; /* Google-style divider */
+    padding-bottom: 10px;
+    margin-bottom: 15px; /* Add margin below header */
+}
+
+h1 {
+    font-size: 1.2em;
+    color: #202124; /* Google's darker grey */
+    margin: 0; /* Remove default margins */
+    padding: 0;
+    border-bottom: none; /* Remove border from h1, it's on .header now */
+}
+
+#reading-mode-toggle {
+    background-color: transparent;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #5f6368;
+    font-size: 0.85em;
+    transition: background-color 0.2s ease;
+}
+
+#reading-mode-toggle:hover {
+    background-color: #f1f3f4;
+}
+
+#reading-mode-toggle.active {
+    background-color: #e8f0fe; /* Light blue indication when active */
+    border-color: #1a73e8;
+    color: #1967d2;
+}
+
+#reading-mode-toggle.active svg {
+     fill: #1967d2;
+}
+
+#claritycheck-sidepanel-status { /* Style for the status indicator added via JS */
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+
+#results {
+     flex-grow: 1; /* Allow results to take remaining space */
+     overflow-y: auto; /* Add scroll if content overflows */
+}
+
+#results p {
+    font-size: 0.9em;
+    color: #5f6368; /* Google's medium grey */
+}
+
+#results h3 {
+    font-size: 1em;
+    color: #202124;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+#results ul {
+    list-style: disc;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+#results li {
+     font-size: 0.9em;
+     margin-bottom: 8px;
+     line-height: 1.4;
+}
+
+#results pre {
+    white-space: pre-wrap; /* Wrap text in analysis */
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: #3c4043;
+    background-color: #fff;
+    padding: 10px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    overflow-x: auto; /* Add horizontal scroll if needed */
+} 

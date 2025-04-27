@@ -1,0 +1,455 @@
+/* Shared styles for ClarityCheck */
+body {
+    font-family: 'Roboto', sans-serif; /* Example Google-like font */
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* --- Floating Indicator Styles --- */
+#claritycheck-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px; /* Size of the indicator */
+    height: 48px;
+    border-radius: 50%; /* Circular shape */
+    background-color: #7f8c8d; /* Neutral grey as default */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 9999; /* Ensure it's on top */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+}
+
+#claritycheck-indicator:hover {
+    transform: scale(1.1); /* Slightly larger on hover */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Status Colors */
+.claritycheck-indicator.status-neutral {
+    background-color: #7f8c8d; /* Neutral Grey */
+}
+
+.claritycheck-indicator.status-green {
+    background-color: #27ae60; /* Green */
+}
+
+.claritycheck-indicator.status-yellow {
+    background-color: #f39c12; /* Yellow */
+}
+
+.claritycheck-indicator.status-red {
+    background-color: #c0392b; /* Red */
+}
+
+#claritycheck-indicator svg {
+    display: block; /* Prevents extra space below svg */
+}
+
+/* --- Custom Overlay Panel Styles (iOS Style) --- */
+#claritycheck-custom-panel {
+    position: fixed;
+    top: 60px; /* Position below potential browser toolbars */
+    right: 20px;
+    width: 350px; /* Width of the panel */
+    max-height: calc(100vh - 80px); /* Max height, considering top/bottom margins */
+    background-color: rgba(242, 242, 247, 0.8); /* Semi-transparent light background (iOS-like) */
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px; /* Rounded corners */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 10000; /* High z-index */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Needed for border-radius clipping */
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; /* Added visibility transition */
+}
+
+/* Visibility States */
+.claritycheck-panel-hidden {
+    opacity: 0;
+    transform: translateX(20px); /* Slight slide out */
+    pointer-events: none;
+    visibility: hidden; /* Ensure it's hidden for accessiblity/events */
+}
+
+.claritycheck-panel-visible {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+}
+
+/* Panel Header */
+.claritycheck-panel-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px 8px 15px; /* Adjusted padding */
+    background-color: rgba(229, 229, 234, 0.75); /* Slightly darker header background */
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.29); /* Thinner iOS-like separator */
+    flex-shrink: 0;
+}
+
+/* NEW: Status Indicator Styling (in header) */
+#claritycheck-panel-status-indicator {
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-size: 0.75em; /* Smaller text */
+    font-weight: 600;
+    margin-right: 8px; /* Space before title */
+    display: inline-block;
+    color: white; /* Default text color */
+    line-height: 1.2; /* Adjust line height */
+    text-align: center;
+    flex-shrink: 0; /* Don't let it shrink */
+}
+
+/* Reuse status colors defined below (or redefine if needed) */
+#claritycheck-panel-status-indicator.status-green { background-color: #34C759; }
+#claritycheck-panel-status-indicator.status-yellow { background-color: #FFCC00; color: #333; }
+#claritycheck-panel-status-indicator.status-red { background-color: #FF3B30; }
+#claritycheck-panel-status-indicator.status-neutral { background-color: #8E8E93; }
+#claritycheck-panel-status-indicator.claritycheck-status-analyzing {
+    background-color: #e5e5ea; /* Light grey for analyzing */
+    color: #333;
+    font-weight: 600;
+}
+
+.claritycheck-panel-title {
+    font-size: 1.0em; /* Slightly smaller title */
+    font-weight: 600;
+    color: #1c1c1e;
+    margin: 0;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Prevent title breaking layout */
+}
+
+/* Panel Buttons (Close, Reading Mode) - Minor Adjustments */
+.claritycheck-panel-button {
+    background: none;
+    border: none;
+    padding: 5px;
+    margin-left: 5px; /* Slightly less margin */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0; /* Prevent buttons shrinking */
+}
+
+.claritycheck-panel-button:hover {
+    background-color: rgba(142, 142, 147, 0.15);
+}
+
+.claritycheck-panel-button svg {
+    fill: #636366;
+    display: block;
+}
+
+/* Reading mode button active state */
+#claritycheck-reading-mode-toggle.active {
+    background-color: rgba(0, 122, 255, 0.1);
+}
+#claritycheck-reading-mode-toggle.active svg {
+    fill: #007AFF;
+}
+
+/* Panel Content Area */
+.claritycheck-panel-content {
+    padding: 12px 15px; /* Adjusted padding */
+    overflow-y: auto;
+    flex-grow: 1;
+    color: #1c1c1e;
+}
+
+/* NEW: Leaning Indicator Styling (in content) */
+/* REMOVED - Replaced by bar styling below */
+/* #claritycheck-panel-leaning-indicator {
+    font-size: 0.85em;
+    font-style: italic;
+    color: #636366; 
+    margin-bottom: 10px; 
+    display: block; 
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.15); 
+    padding-bottom: 8px; 
+} */
+
+/* Status Colors (General) - Keep these */
+.status-green { background-color: #34C759; color: white; } /* Ensure white text */
+.status-yellow { background-color: #FFCC00; color: #333; } /* iOS Yellow (darker text needed) */
+.status-red { background-color: #FF3B30; color: white; } /* Ensure white text */
+.status-neutral { background-color: #8E8E93; color: white; } /* Ensure white text */
+
+/* Content Summary & Findings */
+.claritycheck-panel-summary {
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-top: 0; /* Remove potential top margin */
+    margin-bottom: 15px;
+}
+
+.claritycheck-panel-findings-title {
+    font-size: 1em;
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    border-top: 0.5px solid rgba(60, 60, 67, 0.20); /* Thinner separator */
+    padding-top: 10px;
+}
+
+.claritycheck-panel-findings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.claritycheck-panel-findings-list li {
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    padding-left: 15px;
+    position: relative;
+}
+
+.claritycheck-panel-findings-list li::before { /* Custom bullet */
+    content: '•';
+    color: #8E8E93;
+    position: absolute;
+    left: 0;
+    top: 1px;
+}
+
+.claritycheck-panel-findings-list b {
+    color: #333;
+}
+
+.claritycheck-panel-findings-list i {
+     color: #555;
+     /* Removed font-style: normal; let browser handle italic tag */
+}
+
+/* NEW: Style for finding suggestion */
+.claritycheck-finding-suggestion {
+    color: #007AFF; /* iOS Blue for suggestion */
+    font-style: italic;
+    font-size: 0.95em;
+}
+
+/* Styles added when reading mode is active */
+/* Example: Increase base font size */
+.claritycheck-reading-mode-active #claritycheck-custom-panel {
+    /* Maybe hide the panel in reading mode? Or keep it? */
+    /* display: none; */
+}
+
+/* Make sure indicator isn't hidden by reading mode */
+.claritycheck-reading-mode-active #claritycheck-indicator {
+    display: flex !important; /* Important to override potential hiding */
+}
+
+/* --- End Custom Panel Styles --- */
+
+/* More shared styles will go here */
+
+/* Style for the status area when analyzing */
+.claritycheck-status-analyzing {
+    display: inline-block; /* Make it behave like the status badges */
+    padding: 4px 8px; /* Add padding like the status badges */
+    border-radius: 6px; /* Rounded corners */
+    background-color: #e5e5ea; /* Light grey background */
+    color: #333; /* Ensure dark text */
+    font-weight: bold;
+    font-size: 1.1em; /* Slightly larger */
+    /* Optional: Add a subtle animation */
+    /* animation: claritycheck-pulse 1.5s infinite ease-in-out; */
+}
+
+/* Optional: Define the pulsing animation */
+/*
+@keyframes claritycheck-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+*/
+
+/* Add other styles as needed */
+
+/* --- Highlighting and Hover Card Styles --- */
+
+/* Style for highlighted text (unified base) */
+[class^="claritycheck-highlight-"] {
+    /* Common styles */
+    border-bottom: 1px dotted;
+    cursor: help;
+    position: relative;
+    padding: 0 1px; /* Small padding */
+    margin: 0 -1px; /* Counteract padding */
+}
+
+/* Highlight based on category/severity */
+.claritycheck-highlight-warning { /* For bias, fallacy etc. */
+    background-color: rgba(255, 204, 0, 0.4); /* Yellowish highlight (match status) */
+    border-bottom-color: #FFCC00;
+}
+
+.claritycheck-highlight-info { /* For other info */
+    background-color: rgba(142, 142, 147, 0.3); /* Greyish highlight (match status) */
+    border-bottom-color: #8E8E93;
+}
+
+/* Could add a red highlight if needed */
+/* .claritycheck-highlight-critical { ... } */
+
+
+/* The hover card itself */
+.claritycheck-hover-card {
+    position: absolute;
+    display: none;
+    bottom: 100%;
+    left: 0;
+    transform: translateY(-6px); /* Slightly more gap */
+    background-color: rgba(40, 40, 40, 0.9); /* Darker, slightly transparent */
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px; /* Slightly more rounded */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    font-size: 0.85em;
+    line-height: 1.4;
+    white-space: normal;
+    z-index: 10001;
+    max-width: 300px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+    backdrop-filter: blur(5px); /* Subtle blur for card background */
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Style to show the hover card */
+[class^="claritycheck-highlight-"]:hover .claritycheck-hover-card {
+    display: block;
+    opacity: 1;
+}
+
+/* Hover card pointer */
+.claritycheck-hover-card::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 15px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(40, 40, 40, 0.9) transparent transparent transparent;
+}
+
+/* Hover card content styling */
+.claritycheck-hover-card b { /* Category */
+    color: #eee;
+    font-weight: 600;
+}
+.claritycheck-hover-card i { /* Suggestion text */
+    color: #aeeeee; /* Lighter blue/cyan for suggestion */
+    font-style: italic;
+}
+
+/* --- Info Bars --- */
+.claritycheck-info-bars-container {
+    margin-bottom: 15px;
+    padding-top: 0; /* Adjusted padding */
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.15); /* Add separator below bars */
+    padding-bottom: 15px; /* Space below separator */
+}
+
+.claritycheck-bar-container {
+    margin-bottom: 12px; /* Space between the two bars */
+    position: relative;
+}
+
+.claritycheck-bar-label {
+    font-size: 0.9em; /* Increased font size from 0.8em */
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.claritycheck-bar-wrapper {
+    position: relative;
+    height: 8px; /* Height of the bar */
+    border-radius: 5px;
+    overflow: hidden; /* Clip gradient */
+    background-color: #e5e5ea; /* Fallback background */
+}
+
+/* Political Leaning Bar Gradient */
+.claritycheck-bar-political .claritycheck-bar-gradient {
+    background: linear-gradient(to right, #5a7dcb, #a87ca0, #d85a5a); /* Muted Blue -> Purple -> Muted Red */
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Bias Assessment Bar Gradient */
+.claritycheck-bar-bias .claritycheck-bar-gradient {
+    background: linear-gradient(to right, #6aaa64, #f39c12, #c0392b); /* Muted Green -> Yellow -> Muted Red */
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Indicator Dot */
+.claritycheck-bar-indicator {
+    position: absolute;
+    top: -2px; /* Position slightly above center line */
+    left: 50%; /* Default center */
+    transform: translateX(-50%); /* Center the dot */
+    width: 12px; /* Size of the dot */
+    height: 12px;
+    background-color: #fff; /* White dot */
+    border: 1px solid #bbb;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: left 0.4s ease-in-out; /* Smooth transition */
+}
+
+/* NEW: Percentage Display below the bar */
+.claritycheck-bar-percentage {
+    font-size: 0.75em; /* Small font */
+    font-weight: 500;
+    color: #8E8E93; /* iOS Grey */
+    text-align: center;
+    margin-top: 5px; /* Space below the bar */
+    line-height: 1;
+}
+
+/* Styling for text when bar is not applicable */
+.claritycheck-bar-label.not-applicable-text {
+    font-style: italic;
+    color: #636366;
+    /* Removed margin-bottom from general label if text-only */
+    margin-bottom: 0;
+}
+
+/* Hide political bar container if not applicable and we *don't* want to show text */
+/* .claritycheck-bar-political.not-applicable {
+    display: none;
+} */
+
+/* Remove old status styles if no longer needed */
+/* #claritycheck-custom-panel-status { display: none; } */ 
