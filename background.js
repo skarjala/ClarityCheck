@@ -399,62 +399,37 @@ Return ONLY the JSON object and nothing else. If your web search yields no relev
 // --- Context Menu Setup ---
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
-        id: "analyzeSelection",
-        title: "Analyze selection with ClarityCheck",
+        id: "claritycheckAnalyzeAndVerify",
+        title: "ClarityCheck: Analyze and verify selected text",
         contexts: ["selection"]
     });
-    // RE-ADD context menu for claim verification
-    chrome.contextMenus.create({
-        id: "verifyClaim",
-        title: "Verify selected claim with ClarityCheck",
-        contexts: ["selection"]
-    });
-    console.log("ClarityCheck context menus created."); // Update log message
+    console.log("ClarityCheck combined context menu created.");
 });
 
 // --- MODIFIED Context Menu Click Handler ---
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-    // Restore handling for both menu items
-    if (!tab?.id || !info.selectionText) return; // Basic validation
-
+    // Combined handler for analyze & verify
+    if (!tab?.id || !info.selectionText) return;
     const selection = info.selectionText.trim();
-
-    if (info.menuItemId === "analyzeSelection") {
-        console.log("Context menu clicked for analysis:", selection);
-        callGeminiApi(selection).then(result => {
-             if (result && tab?.id) {
-                 console.log("Sending structured analysis (with score) to content script", result);
-                 chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: result });
-             } else {
-                  const errorResult = result || { status: 'neutral', analysis: 'Analysis failed.', politicalLeaning: 'Unknown', politicalLeaningScore: null, findings: [] };
-                  console.log("Analysis failed or no tab ID found. Sending error to content script");
-                  if (tab?.id) {
-                     chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: errorResult });
-                  }
-             }
-        }).catch(error => {
-             console.error("Error during context menu analysis processing:", error);
-             const errorResult = { status: 'neutral', analysis: 'An unexpected error occurred during analysis.', politicalLeaning: 'Unknown', politicalLeaningScore: null, findings: [] };
-             if (tab?.id) {
-                chrome.tabs.sendMessage(tab.id, { action: "displayAnalysisInCustomPanel", data: errorResult });
-             }
-        });
-    // RE-ADD handling for verifyClaim
-    } else if (info.menuItemId === "verifyClaim") {
-        console.log("Context menu clicked for claim verification:", selection);
+    if (info.menuItemId === "claritycheckAnalyzeAndVerify") {
         // Show loading sidebar immediately
         chrome.tabs.sendMessage(tab.id, { action: "showClaimVerificationLoading" });
-        verifyClaimWithGemini(selection).then(result => {
-            console.log("Sending claim verification result to content script", result);
-            // Use a different action name for claim verification results
-            chrome.tabs.sendMessage(tab.id, { 
-                action: "displayClaimVerification", 
-                data: result // This will be { sources: [...] } or { error: "..." }
+        // Run both analysis and claim verification in parallel
+        Promise.all([
+            callGeminiApi(selection),
+            verifyClaimWithGemini(selection)
+        ]).then(([analysisResult, verificationResult]) => {
+            chrome.tabs.sendMessage(tab.id, {
+                action: "displayCombinedAnalysis",
+                data: {
+                    analysis: analysisResult,
+                    verification: verificationResult
+                }
             });
         }).catch(error => {
-            console.error("Error during context menu claim verification processing:", error);
-            const errorResult = { error: `An unexpected error occurred during claim verification: ${error.message}` };
-            chrome.tabs.sendMessage(tab.id, { action: "displayClaimVerification", data: errorResult });
+            console.error("Error during combined analysis & verification:", error);
+            const errorResult = { error: `An unexpected error occurred during analyze & verify: ${error.message}` };
+            chrome.tabs.sendMessage(tab.id, { action: "displayCombinedAnalysis", data: errorResult });
         });
     }
 });
