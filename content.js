@@ -25,39 +25,31 @@ function extractMainContent() {
     textContent = textContent.replace(/\s{2,}/g, ' \n').trim(); // Replace multiple spaces/newlines with single space or newline
 
     console.log(`Extracted content length: ${textContent.length} characters.`);
-    // Limit content length if necessary (Gemini has input limits)
-    // const MAX_LENGTH = 15000; // Example limit - adjust as needed
-    // if (textContent.length > MAX_LENGTH) {
-    //     textContent = textContent.substring(0, MAX_LENGTH) + "... [Content Truncated]";
-    //     console.log(`Content truncated to ${MAX_LENGTH} characters.`);
-    // }
 
     return textContent;
 }
 
 let customPanel = null;
-// REVERT: Keep old names where applicable, add new ones
 let panelHeader = null;
 let panelContent = null;
-let panelStatusIndicator = null; // NEW span for status
-let panelLeaningIndicator = null; // NEW span for leaning
+let panelStatusIndicator = null;
+let panelLeaningIndicator = null;
 let panelResultsDiv = null;
 let panelReadingModeButton = null;
-let floatingIndicator = null; // Keep this
-let isReadingModeActive = false; // Keep this
-let originalStyles = {}; // Keep this
+let floatingIndicator = null;
+let isReadingModeActive = false;
+let originalStyles = {};
 
-// --- Function to Create the Custom Overlay Panel --- REVERTED STRUCTURE
+// --- Function to Create the Custom Overlay Panel
 function createCustomPanel() {
-    if (document.getElementById('claritycheck-custom-panel')) return; // Already created
+    if (document.getElementById('claritycheck-custom-panel')) return;
 
     console.log("Creating ClarityCheck custom panel (iOS Style)...");
 
     customPanel = document.createElement('div');
     customPanel.id = 'claritycheck-custom-panel';
-    customPanel.classList.add('claritycheck-panel-hidden'); // Start hidden
+    customPanel.classList.add('claritycheck-panel-hidden');
 
-    // Basic Inner Structure (iOS Style) - REMOVED static leaning indicator
     customPanel.innerHTML = `
         <div class="claritycheck-panel-header">
             <span id="claritycheck-panel-status-indicator" class="claritycheck-panel-status-indicator status-neutral">Neutral</span> <!-- NEW Status Indicator -->
@@ -116,12 +108,9 @@ function createCustomPanel() {
     });
 
     console.log("ClarityCheck custom panel created (iOS Style).");
-
-    // Make panel draggable (optional, add if needed)
-    // makeDraggable(customPanel);
 }
 
-// --- Functions to Show/Hide Custom Panel --- REVERTED TO CLASSES
+// --- Functions to Show/Hide Custom Panel
 function showCustomPanel() {
     if (customPanel) {
         customPanel.classList.remove('claritycheck-panel-hidden');

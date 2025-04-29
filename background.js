@@ -434,19 +434,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
 });
 
-
-// --- Side Panel Handling REMOVED ---
-// chrome.sidePanel
-//   .setPanelBehavior({ openPanelOnActionClick: true })
-//   .catch((error) => console.error(error));
-
-// --- MODIFIED Message Listener ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Message received in background:", message, "from sender:", sender);
   let isAsync = false; // Flag for asynchronous operations
-
-  // We no longer handle openSidePanel directly here
-  // if (message.action === "openSidePanel" && sender.tab) { ... }
 
   if (message.action === "analyzePageContent" && sender.tab) {
       if (message.content) {
@@ -479,9 +469,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Return true only if we initiated an async operation
   return isAsync;
 });
-
-// TODO: Add logic for message handling from options page (to save API key)
-
-// Removed hardcoded API key setting line
 
 chrome.storage.sync.get('geminiApiKey', console.log)

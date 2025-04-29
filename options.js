@@ -30,8 +30,6 @@ function restoreOptions() {
            status.style.color = 'red';
        } else if (items.geminiApiKey) {
            apiKeyInput.value = items.geminiApiKey;
-           // Optionally change type to text if a key is loaded, to see it
-           // apiKeyInput.type = 'text'; 
            console.log('ClarityCheck: API Key loaded.');
        } else {
            console.log('ClarityCheck: No API Key found in storage.');

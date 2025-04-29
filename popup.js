@@ -1,6 +1,6 @@
 console.log("Popup script loaded.");
 
-// --- API Key Handling (adapted from options.js) ---
+// --- API Key Handling ---
 
 // Saves options to chrome.storage
 function saveOptions() {
@@ -28,8 +28,6 @@ function saveOptions() {
            status.textContent = 'API Key saved.';
            status.style.color = 'green';
            console.log('ClarityCheck: API Key saved via popup.');
-           // Optionally change input back to password type after saving
-           // document.getElementById('apiKey').type = 'password'; 
        }
        setTimeout(() => {
         status.textContent = '';
@@ -53,8 +51,6 @@ function restoreOptions() {
            status.style.color = 'red';
        } else if (items.geminiApiKey) {
            apiKeyInput.value = items.geminiApiKey;
-            // Optionally allow seeing the key by default in popup?
-           // apiKeyInput.type = 'text'; 
            console.log('ClarityCheck: API Key loaded in popup.');
        } else {
            console.log('ClarityCheck: No API Key found in storage.');
@@ -67,12 +63,9 @@ function restoreOptions() {
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
 
-// Optional: Allow pressing Enter in the input field to save
 document.getElementById('apiKey').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault(); // Prevent default form submission (if any)
         saveOptions();
     }
 });
-
-// Add any popup-specific logic here 

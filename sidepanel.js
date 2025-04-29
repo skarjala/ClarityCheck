@@ -18,14 +18,6 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length > 0) {
         currentTabId = tabs[0].id;
         console.log("Current tab ID for side panel:", currentTabId);
-        // Optionally, ask content script for current reading mode state
-        // chrome.tabs.sendMessage(currentTabId, { action: "getReadingModeState" }, (response) => {
-        //     if (chrome.runtime.lastError) {
-        //         console.log("Error getting reading mode state:", chrome.runtime.lastError.message);
-        //     } else if (response?.isReadingModeActive) {
-        //         readingModeButton?.classList.add('active');
-        //     }
-        // });
     } else {
         console.error("Could not get active tab ID.");
     }
@@ -45,7 +37,6 @@ if (readingModeButton) {
             chrome.tabs.sendMessage(currentTabId, { action: "toggleReadingMode", enable: isActive });
         } else {
             console.error("Cannot toggle reading mode: Tab ID not known.");
-            // Maybe disable the button if tab ID is unknown
         }
     });
 } else {
@@ -64,9 +55,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             statusIndicatorDiv.style.backgroundColor = '#eee'; // Default color
             statusIndicatorDiv.style.color = '#333';
 
-            // --- UPDATED --- Handle the structured data object
             const resultData = message.data;
-
             if (resultData) {
                 // Update Status Indicator
                 const status = resultData.status || 'neutral';
@@ -132,6 +121,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     return false; // Keep channel open only if expecting an async response (like in background script)
 });
-
-// Initial message (optional, could ask background for current status)
-// resultsDiv.innerHTML = '<p>Ready to analyze. Select text and right-click, or click the page indicator.</p>'; 
